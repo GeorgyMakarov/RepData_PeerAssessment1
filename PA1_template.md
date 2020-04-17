@@ -7,9 +7,7 @@ output:
             keep_md: true
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+
 
 ## Introduction
 
@@ -25,8 +23,8 @@ This is first course project of Reproducible research course by JHU on Coursera.
 
 To complete this task, you need to unzip the archive with the file and read the file. One way to approach this task is using *dplyr* and *lubridate* libraries.
 
-```{r, warning=FALSE, message=FALSE}
 
+```r
 setwd("C:/Users/Георгий/Documents/GitHub/RepData_PeerAssessment1")
 exit_data_filename <- "activity.csv"
 if (!file.exists(exit_data_filename)) {
@@ -38,7 +36,17 @@ library(lubridate)
 activity <- activity %>% 
     mutate(date = ymd(activity$date))
 summary(activity)
+```
 
+```
+##      steps             date               interval     
+##  Min.   :  0.00   Min.   :2012-10-01   Min.   :   0.0  
+##  1st Qu.:  0.00   1st Qu.:2012-10-16   1st Qu.: 588.8  
+##  Median :  0.00   Median :2012-10-31   Median :1177.5  
+##  Mean   : 37.38   Mean   :2012-10-31   Mean   :1177.5  
+##  3rd Qu.: 12.00   3rd Qu.:2012-11-15   3rd Qu.:1766.2  
+##  Max.   :806.00   Max.   :2012-11-30   Max.   :2355.0  
+##  NA's   :2304
 ```
 
 ## What is mean total number of steps taken per day?
@@ -53,17 +61,29 @@ This task requires grouping values by date and making group summaries of steps. 
 
 Fisrt, the grouped summary of total steps per day. I had omitted the *NA* values for the summary.
 
-```{r, warning=FALSE, message=FALSE}
 
+```r
 steps_by_day <- activity %>% 
     group_by(date) %>% summarise(total_steps = sum(steps, na.rm = TRUE))
 head(steps_by_day)
+```
 
+```
+## # A tibble: 6 x 2
+##   date       total_steps
+##   <date>           <int>
+## 1 2012-10-01           0
+## 2 2012-10-02         126
+## 3 2012-10-03       11352
+## 4 2012-10-04       12116
+## 5 2012-10-05       13294
+## 6 2012-10-06       15420
 ```
 
 Then comes the histogram of total steps per day.
 
-```{r, warning=FALSE, message=FALSE}
+
+```r
 library(ggplot2)
 
 file1 <- "./figure/hist1.png"
@@ -74,20 +94,40 @@ ggplot(steps_by_day) +
     xlab("Total steps") + ylab("Frequency") +
     ggtitle("Total steps by day")
 dev.off()
+```
 
+```
+## png 
+##   2
+```
+
+```r
 ggplot(steps_by_day) +
     theme_bw() +
     geom_histogram(aes(total_steps), fill = "steelblue") +
     xlab("Total steps") + ylab("Frequency") +
     ggtitle("Total steps by day")
-
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
 
 Finally, the mean and the median for the total steps.
 
-```{r}
+
+```r
 mean(steps_by_day$total_steps)
+```
+
+```
+## [1] 9354.23
+```
+
+```r
 median(steps_by_day$total_steps)
+```
+
+```
+## [1] 10395
 ```
 
 ## What is the average daily activity pattern?
@@ -96,8 +136,8 @@ To complete this task you need to make a time series plot of the 5-minute interv
 
 In order to make a time series plot you have to group the values by time intervals and find mean number of steps per interval. I had approached this with *dplyr* package and the plot itself with *ggplot* library. The plot was saved to *line1.png* file.
 
-```{r, warning=FALSE, message=FALSE}
 
+```r
 steps_by_interval <- activity %>%
     group_by(interval) %>% summarise(steps = mean(steps, na.rm = TRUE))
 
@@ -109,7 +149,14 @@ ggplot(steps_by_interval) +
     xlab("Interval") + ylab("Average number of steps") +
     ggtitle("Average number of steps by interval")
 dev.off()
+```
 
+```
+## png 
+##   2
+```
+
+```r
 ggplot(steps_by_interval) +
     theme_bw() +
     geom_line(aes(interval, steps), color = "steelblue", lwd = 1.0) +
@@ -117,10 +164,17 @@ ggplot(steps_by_interval) +
     ggtitle("Average number of steps by interval")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+
 Finding the interval with the maximum average number of steps.
 
-```{r}
+
+```r
 steps_by_interval[which.max(steps_by_interval$steps),]$interval
+```
+
+```
+## [1] 835
 ```
 
 ## Imputing missing values
@@ -134,26 +188,38 @@ Solving the problem of missing values requires making 4 steps:
 
 First, you need to calculate the number of missing values.
 
-```{r}
+
+```r
 sum(is.na(activity$steps))
+```
+
+```
+## [1] 2304
 ```
 
 With this you need to find what is the proportion of missing values compared to total number of observations.
 
-```{r}
+
+```r
 sum(is.na(activity$steps))/nrow(activity)
+```
+
+```
+## [1] 0.1311475
 ```
 
 With 13.1 percent of missing observations you can expect bias in calculations or summaries of the data. Knowing this you can subsitute missing values with mean value of respective interval.
 
-```{r}
+
+```r
 substitute_steps <- steps_by_interval$steps[match(activity$interval, 
                                               steps_by_interval$interval)]
 ```
 
 Now you are able to make new dataset.
 
-```{r, warning=FALSE, message=FALSE}
+
+```r
 imputed_data <- activity %>% 
     mutate(imputed_steps = ifelse(is.na(activity$steps),
                                   substitute_steps,
@@ -166,10 +232,22 @@ imp_steps_by_day <- imputed_data %>%
 head(imp_steps_by_day)
 ```
 
+```
+## # A tibble: 6 x 2
+##   date       total_steps
+##   <date>           <dbl>
+## 1 2012-10-01      10766.
+## 2 2012-10-02        126 
+## 3 2012-10-03      11352 
+## 4 2012-10-04      12116 
+## 5 2012-10-05      13294 
+## 6 2012-10-06      15420
+```
+
 You use this dataset for making a histogram. The histogram is saved in *hist2.png* file.
 
-```{r, warning=FALSE, message=FALSE}
 
+```r
 file3 <- "./figure/hist2.png"
 png(file3, height = 480, width = 480)
 ggplot(imp_steps_by_day) +
@@ -178,20 +256,40 @@ ggplot(imp_steps_by_day) +
     xlab("Total steps") + ylab("Frequency") +
     ggtitle("Total steps by day")
 dev.off()
+```
 
+```
+## png 
+##   2
+```
+
+```r
 ggplot(imp_steps_by_day) +
     theme_bw() +
     geom_histogram(aes(total_steps), bins = 20 , fill = "steelblue") +
     xlab("Total steps") + ylab("Frequency") +
     ggtitle("Total steps by day")
-
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
 
 Finally, the new mean and the new median for the total steps.
 
-```{r}
+
+```r
 mean(imp_steps_by_day$total_steps)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(imp_steps_by_day$total_steps)
+```
+
+```
+## [1] 10766.19
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
@@ -200,8 +298,8 @@ In order to complete this task you need to create a new factor variable in the d
 
 Start with making days out of dataset and assigning them to weekday or weekend.
 
-```{r}
 
+```r
 day_of_week <- wday(imputed_data$date, week_start = 1)
 imputed_data <- cbind(imputed_data, day_of_week)
 
@@ -213,24 +311,35 @@ weekday_weekend <- sapply(imputed_data$date, function(x){
 })
 
 day_data <- cbind(imputed_data, weekday_weekend)
-
 ```
 
 Now you can recalculate the average steps by interval.
 
-```{r}
 
+```r
 day_data_interval <- day_data %>%
     group_by(interval, weekday_weekend) %>% 
     summarise(steps = mean(imputed_steps, na.rm = TRUE))
 head(day_data_interval)
+```
 
+```
+## # A tibble: 6 x 3
+## # Groups:   interval [3]
+##   interval weekday_weekend  steps
+##      <int> <fct>            <dbl>
+## 1        0 weekday         2.25  
+## 2        0 weekend         0.215 
+## 3        5 weekday         0.445 
+## 4        5 weekend         0.0425
+## 5       10 weekday         0.173 
+## 6       10 weekend         0.0165
 ```
 
 With this it is time to make a plot. The plot is saved as *line2.png* file.
 
-```{r, warning=FALSE, message=FALSE}
 
+```r
 file4 <- "./figure/line2.png"
 png(file4, height = 480, width = 480)
 ggplot(day_data_interval) +
@@ -240,14 +349,22 @@ ggplot(day_data_interval) +
     ggtitle("Average steps by day") + xlab("Interval") +
     ylab("Average steps")
 dev.off()
+```
 
+```
+## png 
+##   2
+```
+
+```r
 ggplot(day_data_interval) +
     theme_bw() +
     geom_line(aes(interval, steps, color = weekday_weekend)) +
     facet_wrap( ~ weekday_weekend, ncol = 1, nrow = 2) +
     ggtitle("Average steps by day") + xlab("Interval") +
     ylab("Average steps")
-
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
 
 
